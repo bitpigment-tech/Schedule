@@ -127,13 +127,14 @@ INDEX_HTML = """<!doctype html>
         max-width: 1800px;
         width: 100%;
         margin: 0 auto;
-        padding: 24px 0 40px;
+        padding: 24px 16px 40px;
       }
       header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         margin-bottom: 6px;
+        gap: 12px;
       }
       h1 {
         font-size: 28px;
@@ -367,6 +368,48 @@ INDEX_HTML = """<!doctype html>
       @keyframes rise {
         from { transform: translateY(6px); opacity: 0.6; }
         to { transform: translateY(0); opacity: 1; }
+      }
+      @media (max-width: 900px) {
+        main {
+          padding: 16px 16px 28px;
+        }
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .group-badge {
+          font-size: 16px;
+          padding: 8px 12px;
+        }
+        .week-nav {
+          flex-wrap: wrap;
+          justify-content: flex-start;
+          gap: 8px;
+          margin: 14px 0 16px;
+        }
+        .font-toggle {
+          width: auto;
+          justify-content: flex-start;
+        }
+        .grid {
+          gap: 16px;
+        }
+        section {
+          padding: 14px;
+        }
+        table {
+          table-layout: auto;
+          font-size: 12px;
+        }
+        th, td {
+          padding: 6px 8px;
+        }
+        th.col-lesson, td.col-lesson { width: 8%; }
+        th.col-time, td.col-time { width: 16%; }
+        th.col-subject, td.col-subject { width: 40%; }
+        th.col-type, td.col-type { width: 8%; }
+        th.col-teacher, td.col-teacher { width: 20%; }
+        th.col-room, td.col-room { width: 8%; }
       }
     </style>
   </head>
