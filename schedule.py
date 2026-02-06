@@ -387,9 +387,11 @@ INDEX_HTML = """<!doctype html>
           gap: 8px;
           margin: 14px 0 16px;
         }
+        .theme-toggle,
         .font-toggle {
-          width: auto;
+          width: 100%;
           justify-content: flex-start;
+          flex-wrap: wrap;
         }
         .grid {
           gap: 16px;
@@ -405,11 +407,28 @@ INDEX_HTML = """<!doctype html>
           padding: 6px 8px;
         }
         th.col-lesson, td.col-lesson { width: 8%; }
-        th.col-time, td.col-time { width: 16%; }
-        th.col-subject, td.col-subject { width: 40%; }
-        th.col-type, td.col-type { width: 8%; }
+        th.col-time, td.col-time { width: 14%; }
+        th.col-subject, td.col-subject { width: 38%; }
+        th.col-type, td.col-type { width: 10%; }
         th.col-teacher, td.col-teacher { width: 20%; }
-        th.col-room, td.col-room { width: 8%; }
+        th.col-room, td.col-room { width: 10%; }
+      }
+      @media (max-width: 600px) {
+        .table-wrap {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        table {
+          min-width: 720px;
+        }
+        .theme-toggle button,
+        .font-toggle button {
+          padding: 6px 8px;
+          font-size: 11px;
+        }
+        .week-nav button {
+          padding: 6px 8px;
+        }
       }
     </style>
   </head>
