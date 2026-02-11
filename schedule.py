@@ -18,8 +18,6 @@ CACHE_TTL_SECONDS = int(os.getenv("MIET_CACHE_TTL", "300"))
 REQUEST_TIMEOUT = float(os.getenv("MIET_TIMEOUT", "10"))
 WEEK_SHIFT = int(os.getenv("MIET_WEEK_SHIFT", "0"))
 WEEK_OVERRIDE = os.getenv("MIET_WEEK_OVERRIDE", "").strip()
-if not WEEK_OVERRIDE and DEFAULT_GROUP == "ИТД-11М":
-    WEEK_OVERRIDE = "1 числитель"
 WEEK_START_STR = os.getenv("MIET_WEEK_START", "2026-02-02").strip()
 
 
@@ -574,7 +572,7 @@ INDEX_HTML = """<!doctype html>
       }
 
       let weekOffset = 0;
-      let currentWeekIndex = 0;
+      let currentWeekNumber = 1;
       let weekCycle = 1;
 
       function weekParam() {
@@ -584,7 +582,7 @@ INDEX_HTML = """<!doctype html>
       function updateNav() {
         const prev = document.getElementById("prev-week");
         if (weekCycle > 1) {
-          const minOffset = -currentWeekIndex;
+          const minOffset = -(currentWeekNumber - 1);
           prev.disabled = weekOffset <= minOffset;
         } else {
           prev.disabled = false;
@@ -603,8 +601,8 @@ INDEX_HTML = """<!doctype html>
           return;
         }
 
-        if (typeof data.week_index === "number") {
-          currentWeekIndex = data.week_index;
+        if (typeof data.week_number === "number") {
+          currentWeekNumber = data.week_number;
         }
         if (typeof data.week_cycle === "number") {
           weekCycle = data.week_cycle;
@@ -1129,17 +1127,30 @@ def api_today():
             today_label = _day_label(target_date.isoweekday(), target_date)
             week_index = 0
         else:
-            week_index = _auto_week_index(
-                entries,
-                meta,
-                today,
-                schedule.get("raw", {}),
-            )
+            forced = _override_week_index(meta)
+            linear_now = _linear_week_number(today, 0)
+            linear_view = _linear_week_number(today, week_offset)
             if meta["cycle"] > 0:
-                week_index = (week_index + week_offset) % meta["cycle"]
-            now_label = _extract_week_label(schedule.get("raw", {})) or meta["labels"][week_index]
-            view_label = meta["labels"][week_index]
+                week_index_now = (
+                    forced if forced is not None else (linear_now - 1) % meta["cycle"]
+                )
+                week_index_view = (
+                    forced if forced is not None else (linear_view - 1) % meta["cycle"]
+                )
+            else:
+                week_index_now = 0
+                week_index_view = 0
+            now_label = meta["labels"][week_index_now]
+            view_label = meta["labels"][week_index_view]
+            day_number = today.isoweekday()
+            lessons = [
+                e
+                for e in entries
+                if e["day"] == day_number
+                and ((e["week"] + meta["shift"]) % meta["cycle"]) == week_index_view
+            ]
             today_label = _day_label(today.isoweekday(), today)
+            week_index = week_index_view
             day_number = today.isoweekday()
             lessons = [
                 e
@@ -1209,16 +1220,22 @@ def api_week():
             view_label = f"{monday.strftime('%d.%m')}–{(sunday - timedelta(days=1)).strftime('%d.%m')}"
             week_index = 0
         else:
-            week_index = _auto_week_index(
-                entries,
-                meta,
-                today,
-                schedule.get("raw", {}),
-            )
+            forced = _override_week_index(meta)
+            linear_now = _linear_week_number(today, 0)
+            linear_view = _linear_week_number(today, week_offset)
             if meta["cycle"] > 0:
-                week_index = (week_index + week_offset) % meta["cycle"]
-            now_label = _extract_week_label(schedule.get("raw", {})) or meta["labels"][week_index]
-            view_label = meta["labels"][week_index]
+                week_index_now = (
+                    forced if forced is not None else (linear_now - 1) % meta["cycle"]
+                )
+                week_index_view = (
+                    forced if forced is not None else (linear_view - 1) % meta["cycle"]
+                )
+            else:
+                week_index_now = 0
+                week_index_view = 0
+            now_label = meta["labels"][week_index_now]
+            view_label = meta["labels"][week_index_view]
+            week_index = week_index_view
             reference = today + timedelta(days=week_offset * 7)
             monday = reference - timedelta(days=reference.weekday())
             for day_index in range(1, 7):
@@ -1227,7 +1244,7 @@ def api_week():
                     e
                     for e in entries
                     if e["day"] == day_index
-                    and ((e["week"] + meta["shift"]) % meta["cycle"]) == week_index
+                    and ((e["week"] + meta["shift"]) % meta["cycle"]) == week_index_view
                 ]
                 day_lessons.sort(
                     key=lambda x: (x.get("lesson_number") or "", x.get("start") or "")
